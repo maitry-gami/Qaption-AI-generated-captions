@@ -1,0 +1,44 @@
+# Node
+node_modules/
+
+# Rendered videos
+renderer/output/
+*.mp4
+
+# Build artifacts
+build/
+dist/
+.dart_tool/
+.pub-cache/
+.pub/
+
+# Secrets and Configs
+.env
+.env.*
+*.env
+!*.env.example
+
+# Firebase & Google Services
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Keystores (Android)
+*.jks
+*.keystore
+key.properties
+
+# OS files
+.DS_Store
+# Temporary backup/diff files
+diff_*.txt
+main_editor_*.txt
+lost_main*.dart
+temp_main*.dart
+old_*.tsx

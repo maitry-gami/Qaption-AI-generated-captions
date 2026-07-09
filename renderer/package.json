@@ -1,0 +1,36 @@
+{
+  "name": "caption-renderer-poc",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.471",
+    "@remotion/google-fonts": "^4.0.482",
+    "@remotion/media-utils": "^4.0.471",
+    "@remotion/renderer": "^4.0.471",
+    "axios": "^1.17.0",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "form-data": "^4.0.5",
+    "multer": "^1.4.5-lts.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "remotion": "^4.0.482"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.482",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  }
+}

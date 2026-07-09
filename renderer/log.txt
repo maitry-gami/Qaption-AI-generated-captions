@@ -1,0 +1,267 @@
+﻿commit 40892feb3b69160a47eedcdd9cb36ef6f8a8b693
+Author: Maitry Gami <maitrygami@gmail.com>
+Date:   Tue Jun 16 11:09:31 2026 +0530
+
+    ui features
+
+diff --git a/renderer/src/styles/MrBeastStyle.tsx b/renderer/src/styles/MrBeastStyle.tsx
+index fb9b5b4..a5c96a6 100644
+--- a/renderer/src/styles/MrBeastStyle.tsx
++++ b/renderer/src/styles/MrBeastStyle.tsx
+@@ -44,20 +44,28 @@ export const MrBeastStyle: React.FC<{ segment: Segment | null; customStyles?: an
+       {segment.words.map((wordObj, i) => {
+         const isActive = currentTime >= wordObj.start && currentTime <= wordObj.end;
+         const isPast = currentTime >= wordObj.start;
+-        if (!isPast && !isActive) return null;
++        // Limit word history to 1.5 seconds to prevent memory overload
++        const timeDiff = currentTime - wordObj.start;
++        if ((!isPast && !isActive) || timeDiff > 1.5) return null;
+ 
+         const wordStartFrame = Math.floor(wordObj.start * fps);
+-        const scale = spring({
+-          fps,
+-          frame: frame - wordStartFrame,
+-          config: { damping: 8, mass: 0.6, stiffness: 300 }
+-        });
++        const framesSinceStart = frame - wordStartFrame;
++
++        let scale = 1;
++        // Only run heavy spring physics for the first 15 frames
++        if (framesSinceStart >= 0 && framesSinceStart < 15) {
++          scale = spring({
++            fps,
++            frame: framesSinceStart,
++            config: { damping: 10, mass: 0.8, stiffness: 250 }
++          });
++        }
+ 
+         const colors = ['#FFFFFF', '#00FFFF', '#FF00FF', '#FFFF00'];
+         let color = colors[i % colors.length];
+         
+         const baseColor = customStyles?.color ? hexToRgba(customStyles.color, customStyles.opacity) : '#FFFFFF';
+-        const emphasisColor = customStyles?.emphasisColor ? hexToRgba(customStyles.emphasisColor, customStyles.opacity) : '#FF0000';
++        const emphasisColor = customStyles?.emphasisColor ? hexToRgba(customStyles.emphasisColor, customStyles.opacity) : '#00FF00';
+         const activeWordColor = customStyles?.activeWordColor ? hexToRgba(customStyles.activeWordColor, customStyles.opacity) : emphasisColor;
+         
+         const activeColor = isActive 
+@@ -79,6 +87,7 @@ export const MrBeastStyle: React.FC<{ segment: Segment | null; customStyles?: an
+             textTransform: 'uppercase',
+             color: color,
+             WebkitTextStroke: `${4 * sf}px black`,
++            paintOrder: 'stroke fill',
+             textShadow: `${8*sf}px ${8*sf}px 0px rgba(0,0,0,1)`,
+             transform: `scale(${scale}) rotate(${i % 2 === 0 ? 3 : -3}deg)`,
+             display: 'inline-block',
+
+commit f047c587d91ac47ccba5a4ebaa9f1fd60ebaac68
+Author: Maitry Gami <maitrygami@gmail.com>
+Date:   Mon Jun 8 23:05:01 2026 +0530
+
+    Add UI features
+
+diff --git a/renderer/src/styles/MrBeastStyle.tsx b/renderer/src/styles/MrBeastStyle.tsx
+index 2656caa..fb9b5b4 100644
+--- a/renderer/src/styles/MrBeastStyle.tsx
++++ b/renderer/src/styles/MrBeastStyle.tsx
+@@ -27,17 +27,19 @@ export const MrBeastStyle: React.FC<{ segment: Segment | null; customStyles?: an
+ 
+   const justifyContent = customStyles?.textAlign ? justifyContentMap[customStyles.textAlign] : 'center';
+ 
++  const sf = customStyles?.scaleFactor ?? 1;
++
+   return (
+     <div style={{
+       position: 'absolute',
+-      bottom: '25%',
++      bottom: '10%',
+       width: '100%',
+       display: 'flex',
+       justifyContent,
+       alignItems: 'center',
+       flexWrap: 'wrap',
+-      gap: '20px',
+-      padding: '0 40px',
++      gap: `${20 * sf}px`,
++      padding: `0 ${Math.round(20 * sf)}px`,
+     }}>
+       {segment.words.map((wordObj, i) => {
+         const isActive = currentTime >= wordObj.start && currentTime <= wordObj.end;
+@@ -72,12 +74,12 @@ export const MrBeastStyle: React.FC<{ segment: Segment | null; customStyles?: an
+         return (
+           <span key={i} style={{
+             fontFamily: selectedFontFamily,
+-            fontSize: isActive ? '65px' : '45px',
++            fontSize: isActive ? `${Math.round(65 * sf)}px` : `${Math.round(45 * sf)}px`,
+             fontWeight: resolvedFontWeight,
+             textTransform: 'uppercase',
+             color: color,
+-            WebkitTextStroke: '4px black',
+-            textShadow: '8px 8px 0px rgba(0,0,0,1)',
++            WebkitTextStroke: `${4 * sf}px black`,
++            textShadow: `${8*sf}px ${8*sf}px 0px rgba(0,0,0,1)`,
+             transform: `scale(${scale}) rotate(${i % 2 === 0 ? 3 : -3}deg)`,
+             display: 'inline-block',
+             transition: 'font-size 0.1s ease',
+
+commit fd9ddb329fb0bd9b7bb50d5e95e0ff18efe05ef5
+Author: Maitry Gami <maitrygami@gmail.com>
+Date:   Fri Jun 5 13:08:17 2026 +0530
+
+    Backend integration and cleanup
+
+diff --git a/renderer/src/styles/MrBeastStyle.tsx b/renderer/src/styles/MrBeastStyle.tsx
+index 0012548..2656caa 100644
+--- a/renderer/src/styles/MrBeastStyle.tsx
++++ b/renderer/src/styles/MrBeastStyle.tsx
+@@ -1,24 +1,39 @@
+ import React from 'react';
+ import { useCurrentFrame, useVideoConfig, spring } from 'remotion';
+ import type { Segment } from '../CaptionEngine';
+-import { loadFont } from '@remotion/google-fonts/Anton';
+-
+-const { fontFamily } = loadFont();
+-
+-export const MrBeastStyle: React.FC<{ segment: Segment | null }> = ({ segment }) => {
++export const MrBeastStyle: React.FC<{ segment: Segment | null; customStyles?: any }> = ({ segment, customStyles }) => {
+   const frame = useCurrentFrame();
+   const { fps } = useVideoConfig();
+   const currentTime = frame / fps;
+ 
+   if (!segment) return null;
+ 
++  const hexToRgba = (hex: string, opacity: number) => {
++    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
++    if (!result) return `rgba(255, 255, 255, ${opacity})`;
++    return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
++  };
++
++  const selectedFontFamily = customStyles?.fontFamily ? `"${customStyles.fontFamily}", sans-serif` : '"Bangers", sans-serif';
++  const isDisplayFont = customStyles?.fontFamily === 'Bangers' || customStyles?.fontFamily === 'Bebas Neue' || (!customStyles?.fontFamily);
++  const resolvedFontWeight = isDisplayFont ? 400 : 900;
++
++  const justifyContentMap: any = {
++    'left': 'flex-start',
++    'center': 'center',
++    'right': 'flex-end',
++    'random': 'space-around'
++  };
++
++  const justifyContent = customStyles?.textAlign ? justifyContentMap[customStyles.textAlign] : 'center';
++
+   return (
+     <div style={{
+       position: 'absolute',
+       bottom: '25%',
+       width: '100%',
+       display: 'flex',
+-      justifyContent: 'center',
++      justifyContent,
+       alignItems: 'center',
+       flexWrap: 'wrap',
+       gap: '20px',
+@@ -37,13 +52,28 @@ export const MrBeastStyle: React.FC<{ segment: Segment | null }> = ({ segment })
+         });
+ 
+         const colors = ['#FFFFFF', '#00FFFF', '#FF00FF', '#FFFF00'];
+-        const color = colors[i % colors.length];
++        let color = colors[i % colors.length];
++        
++        const baseColor = customStyles?.color ? hexToRgba(customStyles.color, customStyles.opacity) : '#FFFFFF';
++        const emphasisColor = customStyles?.emphasisColor ? hexToRgba(customStyles.emphasisColor, customStyles.opacity) : '#FF0000';
++        const activeWordColor = customStyles?.activeWordColor ? hexToRgba(customStyles.activeWordColor, customStyles.opacity) : emphasisColor;
++        
++        const activeColor = isActive 
++          ? (customStyles?.isActiveWordColorEnabled ? activeWordColor : emphasisColor) 
++          : baseColor;
++
++        if (customStyles?.color || customStyles?.emphasisColor || customStyles?.activeWordColor) {
++          color = activeColor;
++        } else if (customStyles?.opacity !== undefined) {
++           // Apply opacity to default MrBeast rotating colors
++           color = hexToRgba(color, customStyles.opacity);
++        }
+ 
+         return (
+           <span key={i} style={{
+-            fontFamily,
++            fontFamily: selectedFontFamily,
+             fontSize: isActive ? '65px' : '45px',
+-            fontWeight: 900,
++            fontWeight: resolvedFontWeight,
+             textTransform: 'uppercase',
+             color: color,
+             WebkitTextStroke: '4px black',
+
+commit 9b7fa00aee01ab6909d771925415a866a76d4377
+Author: Maitry Gami <maitrygami@gmail.com>
+Date:   Wed Jun 3 11:27:53 2026 +0530
+
+    Initial commit
+
+diff --git a/renderer/src/styles/MrBeastStyle.tsx b/renderer/src/styles/MrBeastStyle.tsx
+new file mode 100644
+index 0000000..0012548
+--- /dev/null
++++ b/renderer/src/styles/MrBeastStyle.tsx
+@@ -0,0 +1,61 @@
++import React from 'react';
++import { useCurrentFrame, useVideoConfig, spring } from 'remotion';
++import type { Segment } from '../CaptionEngine';
++import { loadFont } from '@remotion/google-fonts/Anton';
++
++const { fontFamily } = loadFont();
++
++export const MrBeastStyle: React.FC<{ segment: Segment | null }> = ({ segment }) => {
++  const frame = useCurrentFrame();
++  const { fps } = useVideoConfig();
++  const currentTime = frame / fps;
++
++  if (!segment) return null;
++
++  return (
++    <div style={{
++      position: 'absolute',
++      bottom: '25%',
++      width: '100%',
++      display: 'flex',
++      justifyContent: 'center',
++      alignItems: 'center',
++      flexWrap: 'wrap',
++      gap: '20px',
++      padding: '0 40px',
++    }}>
++      {segment.words.map((wordObj, i) => {
++        const isActive = currentTime >= wordObj.start && currentTime <= wordObj.end;
++        const isPast = currentTime >= wordObj.start;
++        if (!isPast && !isActive) return null;
++
++        const wordStartFrame = Math.floor(wordObj.start * fps);
++        const scale = spring({
++          fps,
++          frame: frame - wordStartFrame,
++          config: { damping: 8, mass: 0.6, stiffness: 300 }
++        });
++
++        const colors = ['#FFFFFF', '#00FFFF', '#FF00FF', '#FFFF00'];
++        const color = colors[i % colors.length];
++
++        return (
++          <span key={i} style={{
++            fontFamily,
++            fontSize: isActive ? '65px' : '45px',
++            fontWeight: 900,
++            textTransform: 'uppercase',
++            color: color,
++            WebkitTextStroke: '4px black',
++            textShadow: '8px 8px 0px rgba(0,0,0,1)',
++            transform: `scale(${scale}) rotate(${i % 2 === 0 ? 3 : -3}deg)`,
++            display: 'inline-block',
++            transition: 'font-size 0.1s ease',
++          }}>
++            {wordObj.word}
++          </span>
++        );
++      })}
++    </div>
++  );
++};

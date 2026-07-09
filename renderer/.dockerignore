@@ -1,0 +1,6 @@
+node_modules
+npm-debug.log
+output
+public/video.mp4
+public/captions.json
+.git

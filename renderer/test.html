@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+  <style>
+    .test {
+      font-family: 'Bangers', sans-serif;
+      font-size: 50px;
+      font-weight: 900;
+      -webkit-text-stroke: 2.5px black;
+      text-shadow: 5px 5px 0px rgba(0,0,0,1);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="test">YELLOW</div>
+  <script>
+    document.fonts.ready.then(() => {
+      console.log('FONTS LOADED');
+      console.log(document.querySelector('.test').style.fontFamily);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+name: Qaption
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  webview_flutter: ^4.13.1
+  shelf: ^1.4.2
+  path_provider: ^2.1.5
+  gal: ^2.3.2
+  mime: ^2.0.0
+  webview_flutter_android: ^4.12.0
+  webview_flutter_wkwebview: ^3.25.1
+  http: ^1.6.0
+  image_picker: ^1.1.2
+  dio: ^5.7.0
+  flutter_colorpicker: ^1.1.0
+  google_fonts: ^8.1.0
+  shared_preferences: ^2.5.5
+  video_player: ^2.11.1
+  firebase_core: ^4.11.0
+  firebase_auth: ^6.5.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  change_app_package_name: ^1.5.0
+  flutter_native_splash: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/web/
+    - assets/web/assets/
+    - assets/gifs/
+    - assets/logo.png
+
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat.ttf
+    - family: Bangers
+      fonts:
+        - asset: assets/fonts/Bangers.ttf
+    - family: Bebas Neue
+      fonts:
+        - asset: assets/fonts/BebasNeue.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto.ttf
+    - family: Oswald
+      fonts:
+        - asset: assets/fonts/Oswald.ttf
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
